@@ -6,9 +6,12 @@ export default class WalletObject {
         outgoing
     ){
         this.address = address;
+        this.custom = "";
         this.balance = balance;
         this.incoming = incoming;
         this.outgoing = outgoing;
+        this.publicKey = "";
+        this.privateKey = "";
     }
 
 }

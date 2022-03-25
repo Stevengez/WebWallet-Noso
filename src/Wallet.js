@@ -1,4 +1,4 @@
-export default class {
+export default class Wallet {
 
     constructor(address, custom, balance, incoming = 0, outgoing = 0){
         this.address = address;
@@ -26,5 +26,17 @@ export default class {
 
     get Outgoing(){
         return this.outgoing;
+    }
+
+    set Balance(value){
+        this.balance = value;
+    }
+
+    set Incoming(value){
+        this.incoming = value;
+    }
+
+    set Outgoing(value){
+        this.outgoing = value;
     }
 }
