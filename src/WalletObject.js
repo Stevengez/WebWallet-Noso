@@ -10,8 +10,6 @@ export default class WalletObject {
         this.balance = balance;
         this.incoming = incoming;
         this.outgoing = outgoing;
-        this.publicKey = "";
-        this.privateKey = "";
     }
 
 }

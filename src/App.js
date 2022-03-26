@@ -1,18 +1,24 @@
 import React, {Component, useRef, useState, useEffect} from 'react';
 import BigInt from 'big-integer';
 import {Buffer} from 'buffer';
+import {saveAs} from 'file-saver';
 import Wallet from './Wallet';
 import JSZip from 'jszip';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import PendingInfo from './PendingInfo';
 
-import { createNewAddress, isValidAddress } from './NosoCrypto';
+import { createNewAddress } from './NosoCrypto';
 
 /** Images */
 import noso_coin from './Images/noso_coin.png';
 import settings from './Images/Settings.svg';
 import block_icon from './Images/Block.svg';
+
+/** Wallet File */
+
+import walletFile from './NOSODATA/wallet.pkw';
+import packjson from './NOSODATA/package.json';
 
 import {
   Row,
@@ -25,12 +31,13 @@ import {
   Form,
   Input
 } from 'reactstrap';
+import { writeFile } from 'fs';
 
 const API_HOST = process.env.REACT_APP_API_HOST;
 
 const App = () => {
   const [address, setAddress] = useState("");
-  const [addressList, setAddressList] = useState([new Wallet("N2dpPzDZ6DZZD8cSTiiMTWGUbX7iuE2","",11000,10,30)]);
+  const [addressList, setAddressList] = useState([]);
   const [addressViewList, setAddressViews] = useState([]);
   const [summaryList, setSummaryList] = useState([]);
   const [pendings, setPendings] = useState("");
@@ -38,7 +45,7 @@ const App = () => {
   const [block, changeBlock] = useState(0);
   const [sync, changeSyncStatus] = useState(false);
   const [timestamp, updateTime] = useState(new Date().getTime());
-  const [showImport, toggleImport] = useState(false);
+  const [showAlert, toggleAlert] = useState(false);
 
   const blockRef = useRef();
         blockRef.current = block;
@@ -48,6 +55,8 @@ const App = () => {
         pendingsRef.current = pendings;
   const addressListRef = useRef();
         addressListRef.current = addressList;
+
+  const hiddenFilePicker = useRef(null);
 
   useEffect(() => {
     // Apply gray background
@@ -62,20 +71,153 @@ const App = () => {
     setAddressArray();
 
     // Sync wallet
-    //SyncWallet();
-    /*let syncTask = setInterval(() => {
+    SyncWallet();
+    let syncTask = setInterval(() => {
       SyncWallet();
-    }, 10000);*/
+    }, 10000);
 
-    // Crypto Testing:
-    createNewAddress();
-
+    
     return () => {
       clearInterval(timerTask);
-      //clearInterval(syncTask);
+      clearInterval(syncTask);
     }
 
   }, []);
+
+  const handleImport = () => {
+    hiddenFilePicker.current.click();
+  }
+
+  const handleFileSelection = (e) => {
+    let file = e.target.files[0];
+    let fileExt = file.name.split(".");
+    let lastExt = fileExt.pop();
+    let slastExt = fileExt.pop();
+    
+    if(lastExt.toUpperCase() == "PKW"){
+      parseWallet(file);      
+    }else if(lastExt.toUpperCase() == "BAK" && slastExt.toUpperCase() == "PKW"){
+      parseWallet(file);
+    }else{
+      console.log("Invalid Wallet File (.pkw or .pkw.bak is needed");
+    }
+  }
+
+  const getNewAddress = () => {
+    createNewAddress().then((newWallet) => {
+      addressListRef.current.push(newWallet);
+      setAddressList(addressListRef.current);
+      setAddressArray();
+      writeWalletFile();
+    });
+    toggleAlert(false);
+  }
+
+  const writeWalletFile = () => {
+    let binaryArray = [];
+    const filler = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    
+    for(let wallet of addressListRef.current){
+      let adress_start = Buffer.from([wallet.address.length]);
+      let address = Buffer.from(wallet.address);
+      let address_filler = Buffer.from(filler.slice(0,40-wallet.address.length));
+
+      let custom_start = Buffer.from([wallet.custom.length]);
+      let custom = Buffer.from(wallet.custom);
+      let custom_filler = Buffer.from(filler.slice(0,40-wallet.custom.length));
+
+      let public_start = Buffer.from([wallet.publickey.length]);
+      let publickey = Buffer.from(wallet.publickey);
+      let public_filler = Buffer.from(filler.slice(0,255-wallet.publickey.length));
+
+      let private_start = Buffer.from([wallet.privatekey.length]);
+      let privatekey = Buffer.from(wallet.privatekey);
+      let private_filler = Buffer.from(filler.slice(0,255-wallet.privatekey.length));
+
+      let empty_balance = Buffer.from(filler.slice(0,8));
+      let empty_pending = Buffer.from(filler.slice(0,8));
+      let empty_score = Buffer.from(filler.slice(0,8));
+      let empty_lastop = Buffer.from(filler.slice(0,8));
+
+      let walletBlock = Buffer.concat([
+        adress_start,
+        address,
+        address_filler,
+
+        custom_start,
+        custom,
+        custom_filler,
+        
+        public_start,
+        publickey,
+        public_filler,
+
+        private_start,
+        privatekey,
+        private_filler,
+
+        empty_balance,
+        empty_pending,
+        empty_score,
+        empty_lastop
+      ]);
+      
+      binaryArray.push(walletBlock);
+    }
+    
+    let blob = new Blob(binaryArray);
+    saveAs(blob, "web-wallet.pkw");
+  };
+
+  const parseWallet = (file) => {
+    // FileReader
+    var reader = new FileReader();
+
+    // Callback for read complete
+    reader.onload = function(e) {
+        console.log(e.target.result);
+
+        let summaryBytes = new Int8Array(e.target.result);
+        let SummaryList = [];
+        while(summaryBytes.length > 0){
+          let current = summaryBytes.subarray(0,626);
+          let address = new TextDecoder().decode(current.subarray(1, current[0]+1));
+          let custom = new TextDecoder().decode(current.subarray(42, 42+current[41]));
+          let publickey = new TextDecoder().decode(current.subarray(83, 83+current[82]));
+          let privatekey = new TextDecoder().decode(current.subarray(339, 339+current[338]));
+          
+          const nW = new Wallet(address,custom, 0,0,0);
+          nW.publickey = publickey;
+          nW.privatekey = privatekey;
+
+          let exists = false;
+          addressListRef.current.forEach((value) => {
+            if(value.address == address){
+              exists = true;
+              return;
+            }
+          });
+
+          if(!exists){
+            SummaryList.push(nW);
+          }
+
+          summaryBytes = summaryBytes.subarray(626);
+        }
+        
+        addressListRef.current.push(...SummaryList);
+        setAddressList(addressListRef.current);
+        processPendings();
+        recalcBalanceFromSummary();
+    };
+
+    // Callback for read error
+    reader.onerror = function(e) {
+      console.log('Error : ' + e.type);
+    };
+    
+    reader.readAsArrayBuffer(file);
+  }
 
   const stringToOrderData = (input) => {
     let tokens = input.split(",");
@@ -227,33 +369,7 @@ const App = () => {
     const timeString = new Date(timestamp).toLocaleTimeString("en-GB", {timeZone: "Europe/London"})
     return dateString+" "+timeString;
   }
-
-  const newAddress = () => {
-    let exists = false;
-    addressListRef.current.forEach((value) => {
-      if(value.address == address){
-        exists = true;
-        return;
-      }
-    });
-
-    // Hide Modal
-    toggleImport(false);
-
-    if(!exists){
-      if(isValidAddress(address)){
-        addressListRef.current.push(new Wallet(address, "", 0,0,0));
-        setAddressList(addressListRef.current);
-        processPendings();
-        recalcBalanceFromSummary();
-      }else{
-        console.log("Invalid Address");
-      }
-    }else{
-      console.log("Address already exists");
-    }
-  }
-
+  
   const balance2Currency = (value) => {
     value = String(value);
     while(value.length < 9){
@@ -279,7 +395,7 @@ const App = () => {
             <Row style={{marginTop: -10}}>
               <Col>
                 <span style={{fontSize: '0.5rem'}}>Address</span><br/>
-                <span>{item.Address}</span>
+                <span>{ item.custom == "" ? item.Address:item.custom}</span>
               </Col>
             </Row>
             <Row style={{marginTop: -10}}>
@@ -318,7 +434,7 @@ const App = () => {
         </Col>
         <Col className='my-auto' style={{marginLeft: -10}}>
           <Row>
-            <Col style={{'fontWeight': 'bold'},{'fontSize': '2rem'}}>
+            <Col style={{'fontWeight': 'bold','fontSize': '2rem'}}>
               NOSO
             </Col>
           </Row>
@@ -340,10 +456,14 @@ const App = () => {
     <div className='my-2'>
       <Row>
         <Col className='col-auto'>
-          <Button>New Wallet</Button>
+          <Button onClick={() => toggleAlert(!showAlert)}>New Wallet</Button>
         </Col>
         <Col className='px-0 col-auto'>
-          <Button onClick={() => toggleImport(!showImport)}>Import</Button>
+          <input type='file' style={{display:'none'}} ref={hiddenFilePicker} onChange={handleFileSelection} ></input>
+          <Button onClick={handleImport}>Import</Button>
+        </Col>
+        <Col className='col-auto'>
+          <Button onClick={writeWalletFile}>Export</Button>
         </Col>
         <Col className='my-auto'>
           <p style={{fontSize: 25, fontWeight: 'bold', float: 'right'}} className='my-auto'>{balance2Currency(balance)}</p>
@@ -371,23 +491,19 @@ const App = () => {
     </div>
 
 
-    <Modal isOpen={showImport}>
+    <Modal isOpen={showAlert}>
       <ModalHeader>
-        Add an existing address
+        Create a new address
       </ModalHeader>
       <ModalBody>
-        Type the address.
-        <Form>
-          <Input type='text' onChange={(e) => setAddress(e.target.value)}></Input>
-        </Form>
+        You are about to create a new address to save some NOSO, keep in mind that this web wallet is fully local and won't save any kind of information on the "cloud", as soon as you click on <strong>Create</strong> you'll be prompt to save a new wallet.pkw file with all imported addresses and the new one in order for you to save this information in your PC, in other words, if you refresh this website all the addresses will be gone until you re-import that wallet file.
       </ModalBody>
       <ModalFooter>
-        <Button
-          onClick={newAddress}>
-          Add
+        <Button onClick={getNewAddress}>
+          Create
         </Button>
         {' '}
-        <Button onClick={() => toggleImport(!showImport)}>
+        <Button onClick={() => toggleAlert(!showAlert)}>
           Cancel
         </Button>
       </ModalFooter>

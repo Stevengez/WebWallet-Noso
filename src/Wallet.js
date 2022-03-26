@@ -6,6 +6,8 @@ export default class Wallet {
         this.balance = balance;
         this.incoming = incoming;
         this.outgoing = outgoing;
+        this.publickey = "";
+        this.privatekey = "";
     }
     
     get Address(){
