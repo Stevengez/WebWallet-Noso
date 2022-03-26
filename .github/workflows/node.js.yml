@@ -24,13 +24,14 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build
-    - run: zip -r Webwallet.zip build
+    - run: | 
+        cd build
+        zip -r ../Webwallet.zip *
 
     - name: Save the builded file
       uses: actions/upload-artifact@v3
       with:
         name: Webwallet.zip
-        path: Webwallet.zip
 
   package-release:
     if: contains(github.ref, '/tags/')
@@ -52,6 +53,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: Webwallet.zip
+        path: ./
 
     - name: List files
       run: ls -alF 
