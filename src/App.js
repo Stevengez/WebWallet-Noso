@@ -1,4 +1,4 @@
-import React, {Component, useRef, useState, useEffect} from 'react';
+import React, {useRef, useState, useEffect} from 'react';
 import BigInt from 'big-integer';
 import {Buffer} from 'buffer';
 import {saveAs} from 'file-saver';
@@ -15,11 +15,6 @@ import noso_coin from './Images/noso_coin.png';
 import settings from './Images/Settings.svg';
 import block_icon from './Images/Block.svg';
 
-/** Wallet File */
-
-import walletFile from './NOSODATA/wallet.pkw';
-import packjson from './NOSODATA/package.json';
-
 import {
   Row,
   Col,
@@ -27,16 +22,12 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
-  ModalFooter,
-  Form,
-  Input
+  ModalFooter
 } from 'reactstrap';
-import { writeFile } from 'fs';
 
 const API_HOST = process.env.REACT_APP_API_HOST;
 
 const App = () => {
-  const [address, setAddress] = useState("");
   const [addressList, setAddressList] = useState([]);
   const [addressViewList, setAddressViews] = useState([]);
   const [summaryList, setSummaryList] = useState([]);
@@ -94,9 +85,9 @@ const App = () => {
     let lastExt = fileExt.pop();
     let slastExt = fileExt.pop();
     
-    if(lastExt.toUpperCase() == "PKW"){
+    if(lastExt.toUpperCase() === "PKW"){
       parseWallet(file);      
-    }else if(lastExt.toUpperCase() == "BAK" && slastExt.toUpperCase() == "PKW"){
+    }else if(lastExt.toUpperCase() === "BAK" && slastExt.toUpperCase() == "PKW"){
       parseWallet(file);
     }else{
       console.log("Invalid Wallet File (.pkw or .pkw.bak is needed");
