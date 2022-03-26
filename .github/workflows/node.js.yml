@@ -52,22 +52,20 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: Webwallet.zip
-        path: Webwallet-Release/Webwallet.zip
+        path: /
 
     - name: List files
-      run: ls -alF MobileMiner-Release
+      run: ls -alF 
 
     - name: Name files for Release
-      run: |
-        cd Webwallet-Release
-        mv Webwallet.zip Webwallet-${{ steps.vars.outputs.tag }}.zip
+      run: mv Webwallet.zip Webwallet-${{ steps.vars.outputs.tag }}.zip
 
     - name: Create GitHub release
       uses: softprops/action-gh-release@v1
       with:
         name: Webwallet ${{ steps.vars.outputs.tag }}
         body_path: release-notes.md
-        files: Webwallet-Release/*.zip
+        files: Webwallet-*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
