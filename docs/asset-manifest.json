@@ -1,19 +1,18 @@
 {
   "files": {
     "main.css": "./static/css/main.04179b6f.css",
-    "main.js": "./static/js/main.3c827613.js",
+    "main.js": "./static/js/main.3a19a467.js",
     "static/js/787.83c6683d.chunk.js": "./static/js/787.83c6683d.chunk.js",
     "static/media/noso_coin.png": "./static/media/noso_coin.00c09b5ef0a1b875c8bd.png",
-    "static/media/wallet.pkw": "./static/media/wallet.eeb785f2053810168256.pkw",
-    "static/media/Settings.svg": "./static/media/Settings.f42d244fcf1314f1e29f1e6714e337b0.svg",
+    "static/media/Settings.svg": "./static/media/Settings.6d73454bd5d6b891ae3c4b0d4c2311a3.svg",
     "index.html": "./index.html",
     "static/media/Block.svg": "./static/media/Block.a0a456d9c7c4457e5068ab19aac35fe0.svg",
     "main.04179b6f.css.map": "./static/css/main.04179b6f.css.map",
-    "main.3c827613.js.map": "./static/js/main.3c827613.js.map",
+    "main.3a19a467.js.map": "./static/js/main.3a19a467.js.map",
     "787.83c6683d.chunk.js.map": "./static/js/787.83c6683d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.04179b6f.css",
-    "static/js/main.3c827613.js"
+    "static/js/main.3a19a467.js"
   ]
 }
