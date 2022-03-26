@@ -31,8 +31,46 @@ jobs:
       with:
         name: Webwallet.zip
         path: Webwallet.zip
+
+  package-release:
+    if: contains(github.ref, '/tags/')
+
+    name: Package and create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set output
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+    - name: Download Static Website
+      uses: actions/download-artifact@v3
+      with:
+        name: Webwallet.zip
+        path: Webwallet.zip
+
+    - name: Name files for Release
+      run: mv Webwallet.zip Webwallet-${{ steps.vars.outputs.tag }}.zip
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Webwallet ${{ steps.vars.outputs.tag }}
+        body_path: release-notes.md
+        files: Webwallet-*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+
+    
+
+
   
-  
+
 
   
 
