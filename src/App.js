@@ -87,7 +87,7 @@ const App = () => {
     
     if(lastExt.toUpperCase() === "PKW"){
       parseWallet(file);      
-    }else if(lastExt.toUpperCase() === "BAK" && slastExt.toUpperCase() == "PKW"){
+    }else if(lastExt.toUpperCase() === "BAK" && slastExt.toUpperCase() === "PKW"){
       parseWallet(file);
     }else{
       console.log("Invalid Wallet File (.pkw or .pkw.bak is needed");
@@ -183,7 +183,7 @@ const App = () => {
 
           let exists = false;
           addressListRef.current.forEach((value) => {
-            if(value.address == address){
+            if(value.address === address){
               exists = true;
               return;
             }
@@ -226,11 +226,11 @@ const App = () => {
   const SyncWallet = async () => {
     console.log("Syncing Wallet...");
     getLatestConsensus().then((result) => {
-      if(result.LastBlock > blockRef.current || summaryListRef.current == undefined){
+      if(result.LastBlock > blockRef.current || summaryListRef.current === undefined){
         getSummaryAPI().then(newList => {
           changeBlock(result.LastBlock);
           changeSyncStatus(true);
-          if(pendingsRef.current != result.Pendings){
+          if(pendingsRef.current !== result.Pendings){
             setPendings(result.Pendings);
             processPendings();
           }
@@ -238,7 +238,7 @@ const App = () => {
           recalcBalanceFromSummary();
         });
       }else{
-        if(pendingsRef.current != result.Pendings){
+        if(pendingsRef.current !== result.Pendings){
           setPendings(result.Pendings);
           processPendings();
           recalcBalanceFromSummary();
@@ -257,16 +257,16 @@ const App = () => {
     let tokens = pendingsRef.current.split(" ");
 
     tokens.forEach((token) => {
-      if(token != ""){
+      if(token !== ""){
         let pendingInfo = stringToOrderData(token);
-        if(pendingInfo.TO_Type == "TRFR"){
+        if(pendingInfo.TO_Type === "TRFR"){
           
           addressListRef.current.forEach((wallet) => {
-            if(wallet.Address == pendingInfo.TO_Sender){
+            if(wallet.Address === pendingInfo.TO_Sender){
               wallet.Outgoing = BigInt(wallet.Outgoing)+BigInt(pendingInfo.TO_Amount)+BigInt(pendingInfo.TO_Fee);
             }
 
-            if(wallet.Address == pendingInfo.TO_Receiver){
+            if(wallet.Address === pendingInfo.TO_Receiver){
               wallet.Incoming = BigInt(wallet.Incoming)+BigInt(pendingInfo.TO_Amount);
             }            
           });
@@ -279,9 +279,9 @@ const App = () => {
 
   const recalcBalanceFromSummary = () => {
     addressListRef.current.forEach((value) => {
-      const ismine = (element) => element.address == value.address;
+      const ismine = (element) => element.address === value.address;
       let index = summaryListRef.current.findIndex(ismine);
-      if(index != -1){
+      if(index !== -1){
         value.Balance = BigInt(summaryListRef.current[index].balance) - BigInt(value.Outgoing);
       }
     });
@@ -309,7 +309,7 @@ const App = () => {
     let {done, value} = await reader.read();
 
     while(!done){
-      if(readData != undefined){
+      if(readData !== undefined){
         readData = Buffer.concat([readData, value]);
       }else{
         readData = value;
