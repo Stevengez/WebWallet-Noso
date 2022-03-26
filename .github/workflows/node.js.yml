@@ -56,10 +56,11 @@ jobs:
 
     - name: Create GitHub release
       uses: softprops/action-gh-release@v1
+      run: ls
       with:
         name: Webwallet ${{ steps.vars.outputs.tag }}
         body_path: release-notes.md
-        files: Webwallet-${{ steps.vars.outputs.tag }}.zip
+        files: *.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
