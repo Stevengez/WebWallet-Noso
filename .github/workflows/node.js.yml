@@ -45,11 +45,14 @@ jobs:
       id: vars
       run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
+    - name: Make Release Folder
+      run: mkdir Webwallet-Release
+
     - name: Download Static Website
       uses: actions/download-artifact@v3
       with:
         name: Webwallet.zip
-        path: Webwallet.zip
+        path: Webwallet-Release/Webwallet.zip
 
     - name: Name files for Release
       run: |
