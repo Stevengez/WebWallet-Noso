@@ -52,14 +52,14 @@ jobs:
         path: Webwallet.zip
 
     - name: Name files for Release
-      run: mv Webwallet.zip Webwallet-${{ steps.vars.outputs.tag }}.zip
+      run: mv Webwallet.zip /release/Webwallet-${{ steps.vars.outputs.tag }}.zip
 
     - name: Create GitHub release
       uses: softprops/action-gh-release@v1
       with:
         name: Webwallet ${{ steps.vars.outputs.tag }}
         body_path: release-notes.md
-        files: ./*.zip
+        files: ./release/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
