@@ -17,17 +17,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Use Node.js
+    - name: Prepare NodeJS environment
       uses: actions/setup-node@v2
       with:
         node-version: 16.x
         cache: 'npm'
     - run: npm ci
     - run: npm run build
-    - run: |
-        ls
-        zip -r Webwallet.zip build
-        ls
+    - run: zip -r Webwallet.zip build
+
+    - name: Save the builded file
+      uses: actions/upload-artifact@v3
+      with:
+        name: Webwallet.zip
+        path: Webwallet.zip
+  
+  
 
   
 
