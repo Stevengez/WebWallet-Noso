@@ -1,22 +1,18 @@
 import BigInt from 'big-integer';
 import DivResult from './DivResult';
-import WalletObject from './WalletObject';
 import {Buffer} from 'buffer';
 import Wallet from './Wallet';
 
 // Crypto Libs
 const ripemd160 = require('ripemd160-js');
 const elliptic = require('elliptic');
-const sha1 = require('js-sha1');
+//const sha1 = require('js-sha1');
 const sha256 = require('js-sha256').sha256;
 const ec = new elliptic.ec('secp256k1');
 
 const B58Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-const B36Alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-const B64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-const CoinSimbol = "NOSO"              // Coin 3 chars
-const CoinName = "Noso"                // Coin name
+//const CoinSimbol = "NOSO"              // Coin 3 chars
+//const CoinName = "Noso"                // Coin name
 const CoinChar = "N"                   // Char for addresses
 
 
@@ -47,7 +43,7 @@ const getAddressFromPublicKey = async (pubkey) => {
 
 const isValid58 = (base58Text) => {
     for(let c=0;c<base58Text.length;c++){
-        if(B58Alphabet.indexOf(base58Text[c]) == -1){
+        if(B58Alphabet.indexOf(base58Text[c]) === -1){
             return false;
         }
     }
@@ -60,7 +56,7 @@ const isValidAddress = (address) => {
         if(isValid58(OrigHash)){
             let clave = BMDecto58(BM58Resumen(OrigHash));
             OrigHash = CoinChar + OrigHash + clave;
-            if(OrigHash == address) return true;
+            if(OrigHash === address) return true;
         }
     }
     return false
@@ -117,8 +113,6 @@ const BMHexToDec = (numerohex) => {
     return BigInt(numerohex, 16).toString();
 }
 
-
-
 const BMDecto58 = (number) => {
     let resultDiv;
     let difference;
@@ -160,6 +154,5 @@ export {
     BMDecto58,
     BMDividir,
     BM58Resumen,
-
     createNewAddress
 }

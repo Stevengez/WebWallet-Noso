@@ -337,14 +337,12 @@ const App = () => {
       let balanceArray = current.subarray(82, 90);
       let balance = Buffer.from(balanceArray).readBigInt64LE(0, balanceArray.length);
 
-      let scoreArray = current.subarray(90, 98);
-      let score = Buffer.from(scoreArray).readBigInt64LE(0, scoreArray.length);
+      //let scoreArray = current.subarray(90, 98);
+      //let score = Buffer.from(scoreArray).readBigInt64LE(0, scoreArray.length);
 
-      let lastopArray = current.subarray(98, 106);
-      let lastop = Buffer.from(lastopArray).readBigInt64LE(0, lastopArray.length);
+      //let lastopArray = current.subarray(98, 106);
+      //let lastop = Buffer.from(lastopArray).readBigInt64LE(0, lastopArray.length);
       
-      //
-
       const nW = new Wallet(address,custom, balance);
       SummaryList.push(nW);
       // Move Array to next wallet block
@@ -386,7 +384,7 @@ const App = () => {
             <Row style={{marginTop: -10}}>
               <Col>
                 <span style={{fontSize: '0.5rem'}}>Address</span><br/>
-                <span>{ item.custom == "" ? item.Address:item.custom}</span>
+                <span>{ item.custom === "" ? item.Address:item.custom}</span>
               </Col>
             </Row>
             <Row style={{marginTop: -10}}>
@@ -421,7 +419,7 @@ const App = () => {
     <div className='px-3 py-1 rounded bg-white'>
     <Row>
         <Col className='col-auto my-auto'>
-          <img src={noso_coin} width={45}/>
+          <img src={noso_coin} width={45} alt="NOSO"/>
         </Col>
         <Col className='my-auto' style={{marginLeft: -10}}>
           <Row>
@@ -438,7 +436,7 @@ const App = () => {
         </Col>
         <Col className='my-auto'>
           <Button color='' style={{float: 'right'}}>
-            <img src={settings} width={45} />
+            <img src={settings} width={45} alt="Settings" />
           </Button>
         </Col>
       </Row>
@@ -472,7 +470,7 @@ const App = () => {
       <Row className='px-2'>
         <Col className='col-auto my-auto p-2' style={{color:'white'}}>
           <div className={sync ? ('p-2 rounded bg-success'):('p-2 rounded bg-danger')}>
-            <img src={block_icon} style={{marginTop: -5}} width={20}/> <strong>{block}</strong>
+            <img src={block_icon} style={{marginTop: -5}} width={20} alt="Block"/> <strong>{block}</strong>
           </div>
         </Col>
         <Col className='my-auto'>
