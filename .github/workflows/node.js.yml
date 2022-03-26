@@ -52,7 +52,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: Webwallet.zip
-        path: /
 
     - name: List files
       run: ls -alF 
