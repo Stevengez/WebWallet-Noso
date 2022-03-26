@@ -56,7 +56,6 @@ jobs:
 
     - name: Create GitHub release
       uses: softprops/action-gh-release@v1
-      run: ls
       with:
         name: Webwallet ${{ steps.vars.outputs.tag }}
         body_path: release-notes.md
