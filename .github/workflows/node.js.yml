@@ -54,6 +54,9 @@ jobs:
         name: Webwallet.zip
         path: Webwallet-Release/Webwallet.zip
 
+    - name: List files
+      run: ls -alF MobileMiner-Release
+
     - name: Name files for Release
       run: |
         cd Webwallet-Release
