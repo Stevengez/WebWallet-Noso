@@ -60,7 +60,7 @@ jobs:
       with:
         name: Webwallet ${{ steps.vars.outputs.tag }}
         body_path: release-notes.md
-        files: *.zip
+        files: ./*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
