@@ -1,14 +1,19 @@
+/* global BigInt */
 import React, {useRef, useState, useEffect} from 'react';
-import BigInt from 'big-integer';
+import { QRCodeSVG } from 'qrcode.react';
+//import BigInt from 'big-integer';
 import {Buffer} from 'buffer';
 import {saveAs} from 'file-saver';
 import Wallet from './Wallet';
 import JSZip from 'jszip';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './Style/style.css';
 import PendingInfo from './PendingInfo';
-
-import { createNewAddress } from './NosoCrypto';
+import { createNewAddress, getFee, API_HOST } from './NosoCrypto';
+import { submitOrder, formatAmount } from './Functions';
 
 /** Images */
 import noso_coin from './Images/noso_coin.png';
@@ -25,9 +30,18 @@ import {
   ModalFooter
 } from 'reactstrap';
 
-const API_HOST = process.env.REACT_APP_API_HOST;
-
 const App = () => {
+  // Alert Creation Lib
+  const alertOptions = {
+    position: 'top-right',
+    autoClose: 1000,
+    hideProgressBar: true,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true
+  };
+
+  // Use States
   const [addressList, setAddressList] = useState([]);
   const [addressViewList, setAddressViews] = useState([]);
   const [summaryList, setSummaryList] = useState([]);
@@ -37,17 +51,43 @@ const App = () => {
   const [sync, changeSyncStatus] = useState(false);
   const [timestamp, updateTime] = useState(new Date().getTime());
   const [showAlert, toggleAlert] = useState(false);
-
+  const [QRcode, setQRcode] = useState("");
+  const [showQR, toggleQR] = useState(false);
+  const [showOrderForm, toggleOrderForm] = useState(false);
+  const [validAmount, toggleValid] = useState(undefined);
+  const [fundsConfirm, toggleConfirm] = useState(false);
+  const [fundsOrigin, setOrigin] = useState("");
+  const [fundsDestination, setDestination] = useState("");
+  const [fundsAmountShow, setAmountShow] = useState("0.00000000");
+  const [sendFromAll, toggleSendFromAll] = useState(false);
+  const [fundsRef, setReference] = useState("null");
+    
   const blockRef = useRef();
         blockRef.current = block;
   const summaryListRef = useRef();
         summaryListRef.current = summaryList;
+  const balanceRef = useRef();
+        balanceRef.current = balance;
   const pendingsRef = useRef();
         pendingsRef.current = pendings;
   const addressListRef = useRef();
         addressListRef.current = addressList;
-
+  const fundsOriginRef = useRef();
+        fundsOriginRef.current = fundsOrigin;
+  const fundsDestinationRef = useRef();
+        fundsDestinationRef.current = fundsDestination;
+  const fundsAmountRef = useRef("000000000");
+  const fundsAmountShowRef = useRef();
+        fundsAmountShowRef.current = fundsAmountShow 
+  const fundsRefRef = useRef();
+        fundsRefRef.current = fundsRef; 
+  const sendFromAllRef = useRef();
+        sendFromAllRef.current = sendFromAll;
   const hiddenFilePicker = useRef(null);
+
+  // Amount Filter Variables 
+  let lastInputValue = useRef("0.00000000");
+  // ----------------------- 
 
   useEffect(() => {
     // Apply gray background
@@ -90,7 +130,27 @@ const App = () => {
     }else if(lastExt.toUpperCase() === "BAK" && slastExt.toUpperCase() === "PKW"){
       parseWallet(file);
     }else{
-      console.log("Invalid Wallet File (.pkw or .pkw.bak is needed");
+      showMessage('Invalid Wallet File (.pkw or .pkw.bak is needed', toast.TYPE.ERROR);
+    }
+  }
+
+  const showMessage = (message, type) => {
+    switch(type){
+      case toast.TYPE.WARNING:
+        toast.warn(message, alertOptions);
+        break;
+      case toast.TYPE.ERROR:
+        toast.error(message, alertOptions);
+        break;
+      case toast.TYPE.SUCCESS:
+        toast.success(message, alertOptions);
+        break;
+      case toast.TYPE.INFO:
+        toast.info(message, alertOptions);
+        break;
+      default:
+        toast(message, alertOptions);
+        break;
     }
   }
 
@@ -166,8 +226,6 @@ const App = () => {
 
     // Callback for read complete
     reader.onload = function(e) {
-        console.log(e.target.result);
-
         let summaryBytes = new Int8Array(e.target.result);
         let SummaryList = [];
         while(summaryBytes.length > 0){
@@ -204,7 +262,7 @@ const App = () => {
 
     // Callback for read error
     reader.onerror = function(e) {
-      console.log('Error : ' + e.type);
+      showMessage('Error: '+e, toast.TYPE.ERROR);
     };
     
     reader.readAsArrayBuffer(file);
@@ -224,7 +282,6 @@ const App = () => {
   }
 
   const SyncWallet = async () => {
-    console.log("Syncing Wallet...");
     getLatestConsensus().then((result) => {
       if(result.LastBlock > blockRef.current || summaryListRef.current === undefined){
         getSummaryAPI().then(newList => {
@@ -282,7 +339,7 @@ const App = () => {
       const ismine = (element) => element.address === value.address;
       let index = summaryListRef.current.findIndex(ismine);
       if(index !== -1){
-        value.Balance = BigInt(summaryListRef.current[index].balance) - BigInt(value.Outgoing);
+        value.Balance = BigInt(summaryListRef.current[index].balance);
       }
     });
 
@@ -322,11 +379,9 @@ const App = () => {
 
     // Parse data into zipfile (in memory)
     const zip = await JSZip.loadAsync(readData);
-    console.log("Summary Retrieved...");
     const filename = Object.keys(zip.files)[0];
 
     let summaryBytes = await zip.files[filename].async('uint8array');
-    console.log("Total: ",summaryBytes.length);
 
     let SummaryList = [];
     while(summaryBytes.length > 0){
@@ -337,19 +392,12 @@ const App = () => {
       let balanceArray = current.subarray(82, 90);
       let balance = Buffer.from(balanceArray).readBigInt64LE(0, balanceArray.length);
 
-      //let scoreArray = current.subarray(90, 98);
-      //let score = Buffer.from(scoreArray).readBigInt64LE(0, scoreArray.length);
-
-      //let lastopArray = current.subarray(98, 106);
-      //let lastop = Buffer.from(lastopArray).readBigInt64LE(0, lastopArray.length);
-      
       const nW = new Wallet(address,custom, balance);
       SummaryList.push(nW);
       // Move Array to next wallet block
       summaryBytes = summaryBytes.subarray(106);
     }
 
-    console.log("Addresses: ",SummaryList.length);
     return SummaryList;
   }
 
@@ -372,22 +420,23 @@ const App = () => {
   const setAddressArray = () => {
     let addressViewList = [];
 
-    let grandBalance = 0;
+    let grandBalance = 0n;
     let c = 0
     addressList.forEach((item) => {
       grandBalance += item.Balance;
       grandBalance -= item.Outgoing;
+      let realBalance = item.Balance-item.Outgoing;
       let a = 
       <div key={c}>
         <Row>
-          <Col className='col-auto'>
-            <Row style={{marginTop: -10}}>
+          <Col className='col-auto' style={{backgroundColor: 'transparent'}}>
+            <Row style={{marginTop: -10,backgroundColor: 'transparent'}} >
               <Col>
-                <span style={{fontSize: '0.5rem'}}>Address</span><br/>
+                <span style={{fontSize: '0.5rem', backgroundColor: 'transparent'}}>Address</span><br/>
                 <span>{ item.custom === "" ? item.Address:item.custom}</span>
               </Col>
             </Row>
-            <Row style={{marginTop: -10}}>
+            <Row style={{marginTop: -10, backgroundColor: 'transparent'}}>
               <Col>
                 <span style={{fontSize: '0.5rem'}}>Incoming</span><br/>
                 <span>{balance2Currency(item.Incoming)}</span>
@@ -398,11 +447,29 @@ const App = () => {
               </Col>
               <Col>
                 <span style={{fontSize: '0.5rem'}}>Balance</span><br/>
-                <span>{balance2Currency(item.Balance)}</span>
+                <span>{balance2Currency(realBalance)}</span>
               </Col>
             </Row>
           </Col>
-          <Col></Col>
+          <Col>
+            <ul style={{float: 'right'}} className="list-inline m-0">
+                <li>
+                    <button onClick={() => setOrigin(item.Address)} className="setOriginBtn btn btn-primary btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Set as Origin">
+                      <i className="fa-origin"></i>
+                    </button>
+                </li>
+                <li>
+                    <button onClick={() => {setQRcode(item.address);toggleQR(!showQR);}} className="btn btn-success btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Get QR">
+                      <i className="fa-qr"></i>
+                    </button>
+                </li>
+                <li>
+                    <button className="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete">
+                      <i className="fa-delete"></i>
+                    </button>
+                </li>
+            </ul>
+          </Col>
       </Row>
       <hr style={{marginTop: 0}}/>
       </div>;
@@ -414,8 +481,110 @@ const App = () => {
     changeBalance(grandBalance);
   }
 
+  const validateOrder = () => {
+    if(fundsOriginRef.current === ""){
+      showMessage('Select an address as "Origin"', toast.TYPE.ERROR);
+      return;
+    }
+
+    if(fundsDestinationRef.current === ""){
+      showMessage('Enter a destination address.', toast.TYPE.ERROR);
+      return;
+    }
+
+    if(fundsAmountRef.current === "" || BigInt(fundsAmountRef.current) === 0n){
+
+      showMessage('Enter a valid amount of noso.', toast.TYPE.ERROR);
+      return;
+    }
+
+    blockOrigin();
+    toggleConfirm(!fundsConfirm);    
+  }
+
+  const confirmOrder = () => {
+    submitOrder(
+      fundsOriginRef.current, 
+      fundsDestinationRef.current, 
+      fundsAmountRef.current, 
+      String(fundsRefRef.current).replaceAll(" ","_"),
+      addressListRef.current, 
+      summaryListRef.current, 
+      blockRef.current,
+      sendFromAllRef.current).then((result) => {
+        if(result === "-1"){
+          showMessage('Not enough funds, select different origin or check "Send from all"', toast.TYPE.ERROR);
+          toggleConfirm(!fundsConfirm);
+          unBlockOrigin();
+        }else{
+          showMessage('Order Accepted', toast.TYPE.SUCCESS);
+          
+          toggleConfirm(!fundsConfirm);
+          unBlockOrigin();
+          setDestination("");
+
+          setAmountShow("0.00000000");
+          lastInputValue.current = "0.00000000";
+          fundsAmountRef.current = "000000000";
+          toggleSendFromAll(false);
+          setAddressList(addressListRef.current);
+          recalcBalanceFromSummary();
+        }
+      });
+  }
+
+  const pasteFromClipBoard = async () => {
+    const content = await navigator.clipboard.readText();
+    setDestination(content);
+  }
+
+  const blockOrigin = () => {
+    Array.from(document.getElementsByClassName('setOriginBtn')).forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
+
+  const unBlockOrigin = () => {
+    Array.from(document.getElementsByClassName('setOriginBtn')).forEach((btn) => {
+      btn.disabled = false;
+    });
+    toggleConfirm(!fundsConfirm);
+  }
+
+  const verifyAmount = () => {
+    let sendAmount = BigInt(fundsAmountRef.current);
+    
+    if(sendAmount === 0n){
+      toggleValid(undefined);
+    }else{
+      if(BigInt(String(balanceRef.current).replace(".","")) >= sendAmount+getFee(fundsAmountRef.current)){
+        toggleValid(true);
+      }else{
+        toggleValid(false);
+      }
+    }
+  }
+
+  const formatAmountShow = async (input, value) => {
+      let savedPos = input.selectionStart;
+      let newChar = value.substring(savedPos-1,savedPos);
+      let oldValue = lastInputValue.current;
+
+      const {finalValue, finalPos} = formatAmount(savedPos, newChar, oldValue, value);
+      
+      setAmountShow(finalValue);
+      fundsAmountRef.current = finalValue.replace(".","");
+      lastInputValue.current = finalValue;
+      
+      setTimeout(() => {
+        input.setSelectionRange(finalPos, finalPos);
+      }, 0);
+
+      verifyAmount();
+  }
+
   return(
-  <div className='m-5'>
+  <div className='d-xs-block m-5'>
     <div className='px-3 py-1 rounded bg-white'>
     <Row>
         <Col className='col-auto my-auto'>
@@ -467,7 +636,7 @@ const App = () => {
     </div>
 
     <div className='p-2 rounded bg-white'>
-      <Row className='px-2'>
+      <Row className='px-2' style={{display: !showOrderForm ? 'flex':'none'}}>
         <Col className='col-auto my-auto p-2' style={{color:'white'}}>
           <div className={sync ? ('p-2 rounded bg-success'):('p-2 rounded bg-danger')}>
             <img src={block_icon} style={{marginTop: -5}} width={20} alt="Block"/> <strong>{block}</strong>
@@ -476,6 +645,107 @@ const App = () => {
         <Col className='my-auto'>
           {formatDate()}
         </Col>
+        <Col className='my-auto'>
+          <Button style={{float: "right"}} onClick={() => toggleOrderForm(!showOrderForm)}>Send Funds</Button>
+        </Col>
+      </Row>
+      <Row className='py-3' style={{display: showOrderForm ? 'block':'none', paddingLeft: '3vh'}}>
+        <Row>
+          <h5>Send funds</h5>
+        </Row>
+        <Row>
+          <Row>
+            <Col className='col-auto  FundsLabel'>
+              <p>From: </p>
+            </Col>
+            <Col>
+              <p className='FundsInput'>{fundsOrigin}</p>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col className='col-auto FundsLabel'>
+              <p>Destination: </p>
+            </Col>
+            <Col>
+              <Row>
+                <Col className='col-auto'>
+                  <button className='FundsButton' onClick={() => pasteFromClipBoard()}>
+                    <i  className='fa-paste' 
+                        data-toggle="tooltip" 
+                        data-placement="top" 
+                        title="Paste">
+                    </i>
+                  </button>
+                </Col>
+                <Col>
+                  <input className='FundsInput' type='text' onChange={(e) => setDestination(e.target.value)} value={fundsDestination} disabled={fundsConfirm}/>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col className='col-auto FundsLabel'>
+              <p>Amount: </p>
+            </Col>
+            <Col>
+              <Row>
+                <Col className='col-auto'>
+                  <button className='FundsButton' style={{backgroundColor: validAmount === undefined ? '#6c757d':(validAmount?'green':'red')}}>
+                    <i  className='fa-amount' 
+                        data-toggle="tooltip" 
+                        data-placement="top" 
+                        title="Reset">
+                    </i>
+                  </button>
+                </Col>
+                <Col>
+                  <input className='FundsInput' type='text' onChange={(e) => formatAmountShow(e.target, e.target.value)} value={fundsAmountShow} disabled={fundsConfirm}/>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col className='col-auto FundsLabel'>
+              <p>Reference: </p>
+            </Col>
+            <Col>
+              <input className='FundsInput' type='text' onChange={(e) => setReference(e.target.value)} disabled={fundsConfirm}/>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col className='col-auto'>
+            <label>
+              <input type='checkbox' onChange={(e) => toggleSendFromAll(e.target.checked)} disabled={fundsConfirm}/> Send from all
+            </label>
+            </Col>
+            <Col>
+              <Row>
+                <Col>
+                  <Button style={{minWidth: '10vh', float: 'right'}} onClick={() => { fundsConfirm ? unBlockOrigin():toggleOrderForm(!showOrderForm)}}>
+                    Back
+                  </Button>
+                </Col>
+                <Col className='col-auto'>
+                  <Button
+                    style={{display: !fundsConfirm ? 'block':'none' ,minWidth: '10vh', float: 'right'}}
+                    onClick={() => validateOrder()}>
+                    Send
+                  </Button>
+                  <Button
+                    color='warning'
+                    style={{display: fundsConfirm ? 'block':'none' ,minWidth: '10vh', float: 'right'}}
+                    onClick={() => confirmOrder()}>
+                    Confirm
+                  </Button>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+        </Row>
       </Row>
     </div>
 
@@ -497,6 +767,28 @@ const App = () => {
         </Button>
       </ModalFooter>
     </Modal>
+
+    <Modal isOpen={showQR}>
+      <ModalHeader className='mx-auto'>
+        {QRcode}
+      </ModalHeader>
+      <ModalBody className='mx-auto'>
+        <QRCodeSVG value={QRcode}/>
+      </ModalBody>
+      <ModalFooter>
+        <Button onClick={() => toggleQR(!showQR)}>
+          Close
+        </Button>
+      </ModalFooter>
+    </Modal>
+
+    <ToastContainer
+      position='top-left'
+      autoClose={1000}
+      hideProgressBar={true}
+      draggable
+      pauseOnHover
+      theme='colored'/>
   </div>
   );
 }

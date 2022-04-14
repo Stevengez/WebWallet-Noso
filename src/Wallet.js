@@ -1,6 +1,8 @@
+/* global BigInt */
+
 export default class Wallet {
 
-    constructor(address, custom, balance, incoming = 0, outgoing = 0){
+    constructor(address, custom, balance, incoming = 0n, outgoing = 0n){
         this.address = address;
         this.custom = custom;
         this.balance = balance;
@@ -31,14 +33,14 @@ export default class Wallet {
     }
 
     set Balance(value){
-        this.balance = value;
+        this.balance = BigInt(value);
     }
 
     set Incoming(value){
-        this.incoming = value;
+        this.incoming = BigInt(value);
     }
 
     set Outgoing(value){
-        this.outgoing = value;
+        this.outgoing = BigInt(value);
     }
 }

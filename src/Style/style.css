@@ -1,0 +1,49 @@
+
+.fa-origin::before{
+    content: url("../Images/WalletOrigin.svg");
+    zoom: 0.33;
+}
+
+.fa-qr::before {
+    content: url("../Images/QR.svg");
+    zoom: 0.03;
+}
+
+.fa-delete::before {
+    content: url("../Images/Delete.svg");
+    zoom: 0.03;
+}
+
+.fa-paste::before {
+    content: url("../Images/Paste.svg");
+    zoom: 0.3;
+}
+
+.fa-amount::before {
+    content: url("../Images/Dollar.svg");
+    zoom: 0.03;
+}
+
+.FundsButton {
+    border-radius: 10px;
+    border: 0px;
+    background-color: #6c757d;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.FundsLabel {
+    min-width: 12vh;
+}
+
+.FundsInput {
+    min-width: 100%;
+    text-align: right;
+    padding-right: 1vh;
+    border: 0;
+    float: right;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 8px;
+}
+
