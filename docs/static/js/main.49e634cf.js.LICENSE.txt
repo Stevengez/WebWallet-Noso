@@ -29,7 +29,25 @@ https://github.com/nodeca/pako/blob/master/LICENSE
  * @license  MIT
  */
 
+/*! (c) Stefan Thomas | https://github.com/bitcoinjs/bitcoinjs-lib
+ */
+
+/*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
+ */
+
+/*! (c) Tom Wu, Kenji Urushima | http://www-cs-students.stanford.edu/~tjw/jsbn/
+ */
+
+/*! Mike Samuel (c) 2009 | code.google.com/p/json-sans-eval
+ */
+
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
+
+/**
+ * @license qrcode.react
+ * Copyright (c) Paul O'Shannessy
+ * SPDX-License-Identifier: ISC
+ */
 
 /**
  * [js-sha256]{@link https://github.com/emn178/js-sha256}
