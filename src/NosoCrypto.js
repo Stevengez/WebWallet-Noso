@@ -37,7 +37,7 @@ const createNewAddress = async() => {
     let publicKey = Buffer.from(publicKeyHex, 'hex').toString('base64');
 
     const publicAddress = await getAddressFromPublicKey(publicKey);
-    let newWallet = new Wallet(publicAddress,"",0,0,0);
+    let newWallet = new Wallet(publicAddress,"",0n,0n,0n);
     newWallet.publickey = publicKey;
     newWallet.privatekey = privateKey;
     return newWallet;

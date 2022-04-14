@@ -235,7 +235,7 @@ const App = () => {
           let publickey = new TextDecoder().decode(current.subarray(83, 83+current[82]));
           let privatekey = new TextDecoder().decode(current.subarray(339, 339+current[338]));
           
-          const nW = new Wallet(address,custom, 0,0,0);
+          const nW = new Wallet(address,custom, 0n,0n,0n);
           nW.publickey = publickey;
           nW.privatekey = privatekey;
 
