@@ -1,3 +1,3 @@
-## Version 1.1.1
-- New address creation is now fixed
+## Version 1.1.2
+- Change the NOSOtranslator host to a free service to keep it working (may stop working if too much users are using it, maybe in the future with some publicity it can be migrated to a paid service)
 - **Webwallet doesn't upload any information to the cloud, manages all the information and task locally and therefore you should use it carefully (make sure to save any new address created here)**
