@@ -1,5 +1,3 @@
-## Version 1.1.5
-- Change the NOSOtranslator Azure VPN host service to keep it working (may stop working if too much users are using it, maybe in the future with some publicity it can be migrated to better service)
-- Added HTTPS with self signed certificate to allow hosted versions of the wallet (that use https)
-- Note: Fixed HTTPS host address (added one more / at the end, silly me)
+## Version 1.1.6
+- Moved the host from vpn in azure to a container app to reduce costs and have a valied signed cert to avoid https issues (https://nosotranslator-container.wittymeadow-b1aa8a5a.centralus.azurecontainerapps.io)
 - **Webwallet doesn't upload any information to the cloud, manages all the information and task locally and therefore you should use it carefully (make sure to save any new address created here)**
