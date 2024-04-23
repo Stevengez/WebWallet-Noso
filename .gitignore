@@ -71,3 +71,4 @@ typings/
 
 # FuseBox cache
 .fusebox/
+.fusestock/
